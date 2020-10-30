@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/js/bluetooth.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.9/vue.min.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/vConsole/3.3.4/vconsole.min.js"></script>
+  <script>
+    // init vConsole
+    var vConsole = new VConsole();
+    console.log('Hello world');
+  </script> 
+  <title>Html5+  蓝牙打印</title>
+</head>
+<body>
+  <h3>先在手机蓝牙配对成功后，在该页面内进行打印!</h2>
+  <div id="app">
+    <div>
+      <Button>{{ statusList[status] }}</Button>
+    </div>
+    <div>
+<!--      <Button @click="_printText('DC:0D:30:9B:AC:99')">打印</Button>-->
+      <Button @click="_printTest('12323123123')">打印</Button>
+      <br/>
+      <Button @click="_printQrcode('12323123123')">打印二维码</Button>
+    </div>
+    <div>
+      <br/>
+      <Input v-model="line" placeholder="走纸行数" />
+      <Button @click="feed(line)">走纸</Button>
+    </div>
+    <div>
+      <br/>
+      <Input v-model="marginNum" placeholder="定位" />
+      <Button @click="_setPrintPosition(marginNum)">定位</Button>
+    </div>
+    <div>
+      <br/>
+      <Button @click="_setCharacterScale(1)">放大</Button>
+      <Button @click="_setCharacterScale(0)">缩小</Button>
+    </div>
+    <div>
+      <br/>
+      <Input v-model="light" placeholder="light" />
+      <Input v-model="weight" placeholder="weight" />
+      <Button @click="_setPrintLocation(light,weight)">绝对位置</Button>
+    </div>
+    <div>
+      <br/>
+      <Input v-model="rotateNum" placeholder="旋转" />
+      <Button @click="_setPrintRotate(rotateNum)">旋转</Button>
+    </div>
+    <div>
+      <br/>
+      <Button @click="_closeConnect()">关闭连接</Button>
+    </div>
+  </div>
+</body>
+<script>
+  // 监听 plusready 加载完成
+document.addEventListener('plusready',function() {
+  new Vue({
+    "el": "#app",
+    data () {
+      return {
+        msg: '样品内容\n' + '101013Q73898\n' + '2020-10-10 09:33:33\n' + '张三三\n',
+        code: '191013Q7398',
+        mac: '',
+        line: 8,
+        light: 0,
+        weight: 0,
+        rotateNum: 0,
+        marginNum: 1,
+        initFlag: false,
+        bluetoothPrinter: null,
+        text: '配对',
+        status: 0,
+        statusList: [
+          '待连接',
+          '连接中',
+          '已连接'
+        ]
+      }
+    },
+    mounted () {
+      this._initBluetooth()
+    },
+    destroyed () {
+      this._closeConnect()
+    },
+    watch: {
+      status () {
+        console.log('status==>', this.status)
+      }
+    },
+    methods: {
+      // 初始化并配对设备
+      _initBluetooth () {
+        if (!this.bluetoothPrinter) {
+          this.bluetoothPrinter = new Bluetooth()
+          console.log(this.bluetoothPrinter.status)
+        }
+        this.bluetoothPrinter.initState()
+        this.status = this.bluetoothPrinter.status
+      },
+      _printTest (msg) {
+        this.bluetoothPrinter.initPrinter()
+        this.bluetoothPrinter.setPrintPosition(1) // 居中 打印
+        this.bluetoothPrinter.printQrcode(msg)
+        this.bluetoothPrinter.printTextNewLine('样品111')
+        this.bluetoothPrinter.printTextNewLine('12323123123')
+        this.bluetoothPrinter.printTextNewLine('2010-10-10 10:33:33')
+        this.bluetoothPrinter.printTextNewLine('张三三')
+        this.bluetoothPrinter.printLine(3)
+      },
+      _printQrcode (msg) {
+        this.bluetoothPrinter.initPrinter()
+        this.bluetoothPrinter.printTabSpace(10)
+        this.bluetoothPrinter.printQrcode(msg)
+      },
+      feed (n) {
+        this.bluetoothPrinter.feedPoint(n)
+      },
+      _closeConnect () {
+        if (this.bluetoothPrinter) {
+          this.bluetoothPrinter.closeConnect()
+        }
+      },
+      _setPrintLocation (l, w) {
+        this.bluetoothPrinter.setPrintLocation(l, w)
+      },
+      _setPrintRotate (l) {
+        this.bluetoothPrinter.setPrintRotate(l)
+      },
+      _setCharacterScale (l) {
+        this.bluetoothPrinter.setCharacterScale(l)
+      },
+      _setPrintPosition (l) {
+        this.bluetoothPrinter.setPrintPosition(l)
+      }
+    }
+  })
+}, false)
+</script>
+</html>
